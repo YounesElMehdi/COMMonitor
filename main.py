@@ -1,7 +1,7 @@
 import serial.tools.list_ports
+import serial
 
-
-def welcome():
+def display_welcome_message():
     print('''
     **********************************
     *                                *
@@ -13,45 +13,44 @@ def welcome():
     ''')
 
 
-def portcheck():
+def list_ports():
     ports = serial.tools.list_ports.comports()
-    print(f"{len(ports)} Ports found")
-
     if ports:
+        print(f"{len(ports)} Ports found:")
         for i, port in enumerate(ports, start=1):
-            print(f"\nPort {i}:")
-            print(f"  Port Name       : {port.name}")
-            print(f"  Port PID/VID    : {port.pid}/{port.vid}")
-            print(f"  Port HWID       : {port.hwid}")
-            print(f"  Port Device     : {port.device}")
-            print(f"  Port Product    : {port.product}")
-            print(f"  Port Location   : {port.location}")
-            print(f"  Port Manufacturer: {port.manufacturer}")
-            print(f"  Port Description: {port.description}")
-            print(f"  Port Interface  : {port.interface}")
-            print(f"  Port Serial No. : {port.serial_number}")
+            print(f"{i}. {port.name} - {port.description}")
+        return ports
     else:
-        print('No Serial Ports Detected')
+        print("No Serial Ports Detected")
+        return None
 
 
-def ask_for_exit_confirmation():
+def select_and_check_port(ports):
     while True:
-        user_input = input(
-            "Do you want to exit the application? Type 'yes' to exit or 'no' to rerun the app: ").strip().lower()
-        if user_input == 'yes':
-            print("Exiting the application...")
-            exit()
-        elif user_input == 'no':
-            print("Restarting the application...\n")
-            main()
-        else:
-            print("Invalid input. Please type 'yes' to exit or 'no' to rerun the app.")
+        try:
+            selection = int(input("Select a port by number to check its status: ").strip())
+            selected_port = ports[selection - 1]  # Automatically raises an IndexError if out of range
+            check_port_status(selected_port)
+            break
+        except (ValueError, IndexError):
+            print("Invalid selection. Please enter a valid port number.")
+
+
+def check_port_status(port):
+    try:
+        with serial.Serial(port.device):
+            print(f"Port {port.name} is Available.")
+    except serial.SerialException:
+        print(f"Port {port.name} is In Use or Unavailable.")
 
 
 def main():
-    welcome()
-    portcheck()
-    ask_for_exit_confirmation()
+    display_welcome_message()
+    ports = list_ports()
+    if ports:
+        select_and_check_port(ports)
+    else:
+        print("Exiting the application as no ports were detected.")
 
 
 if __name__ == "__main__":
