@@ -15,30 +15,32 @@ def welcome():
 
 def portcheck():
     ports = serial.tools.list_ports.comports()
-    print(len(ports), 'ports found')
+    print(f"{len(ports)} Ports found")
+
     if ports:
-        for port in ports:
-            print(port.name)
-            print(port.pid)
-            print(port.hwid)
-            print(port.device)
-            print(port.product)
-            print(port.location)
-            print(port.manufacturer)
-            print(port.description)
-            print(port.interface)
-            print(port.serial_number)
-            print(port.vid)
+        for i, port in enumerate(ports, start=1):
+            print(f"\nPort {i}:")
+            print(f"  Port Name       : {port.name}")
+            print(f"  Port PID/VID    : {port.pid}/{port.vid}")
+            print(f"  Port HWID       : {port.hwid}")
+            print(f"  Port Device     : {port.device}")
+            print(f"  Port Product    : {port.product}")
+            print(f"  Port Location   : {port.location}")
+            print(f"  Port Manufacturer: {port.manufacturer}")
+            print(f"  Port Description: {port.description}")
+            print(f"  Port Interface  : {port.interface}")
+            print(f"  Port Serial No. : {port.serial_number}")
     else:
-        print('No Seria port Detected')
+        print('No Serial Ports Detected')
 
 
 def ask_for_exit_confirmation():
     while True:
-        user_input = input("Do you want to exit the application? Type 'yes' to exit or 'no' to rerun the app: ").strip().lower()
+        user_input = input(
+            "Do you want to exit the application? Type 'yes' to exit or 'no' to rerun the app: ").strip().lower()
         if user_input == 'yes':
             print("Exiting the application...")
-            break
+            exit()
         elif user_input == 'no':
             print("Restarting the application...\n")
             main()
