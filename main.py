@@ -23,13 +23,17 @@ def log_port_info(port, status):
 
 def check_port_status(port):
     try:
-        with serial.Serial(port.device) as ser:
+        with serial.Serial(port.device, timeout=1) as ser:  # Set a 1-second timeout
             status = "Ready to Use"
             print(f"Port {port.name} is {status}.")
             logging.info(f"Port {port.name} is {status}.")
-            # Log data received from the port
-            received_data = ser.read(100)  # Example: read 100 bytes
-            logging.info(f"Data received: {received_data}")
+
+            # Try to read some data, but don't block indefinitely
+            received_data = ser.read(100)  # Attempt to read up to 100 bytes
+            if received_data:
+                logging.info(f"Data received: {received_data}")
+            else:
+                logging.info("No data received or read timeout occurred.")
     except serial.SerialException as e:
         status = "Unknown Error"
         if sys.platform.startswith('win'):
@@ -41,6 +45,8 @@ def check_port_status(port):
                 status = "Hardware Failure"
             elif e.errno == 1167:  # ERROR_DEVICE_NOT_CONNECTED
                 status = "Disconnected"
+            elif e.errno == 22:  # ERROR_INVALID_PARAMETER
+                status = "Disabled or Invalid Configuration"
         else:
             # General handling for other platforms
             status = "Unavailable or In Use"
@@ -76,18 +82,6 @@ def select_and_check_port(ports):
             logging.warning("Invalid selection made by user.")
 
 
-def display_welcome_message():
-    print('''
-    **********************************
-    *                                *
-    * ╔═╗╔═╗╔╦╗  ┌┬┐┌─┐┌┐┌┬┌┬┐┌─┐┬─┐ *
-    * ║  ║ ║║║║  ││││ │││││ │ │ │├┬┘ *
-    * ╚═╝╚═╝╩ ╩  ┴ ┴└─┘┘└┘┴ ┴ └─┘┴└─ *
-    *                                *
-    **********************************
-    ''')
-
-
 def ask_for_exit_confirmation():
     while True:
         user_input = input(
@@ -104,15 +98,24 @@ def ask_for_exit_confirmation():
         else:
             print("Invalid input. Please type 'yes' or 'no'.")
             logging.warning("User entered invalid input for exit confirmation.")
+
+
 def main():
-    display_welcome_message()
+    print('''
+    **********************************
+    *       COMMonitor App           *
+    **********************************
+    ''')
+
     logging.info("COMMonitor App Started")
+
     ports = list_ports()
     if ports:
         select_and_check_port(ports)
     else:
         print("Exiting the application as no ports were detected.")
         logging.info("Exiting the application as no ports were detected.")
+
     ask_for_exit_confirmation()
 
 
