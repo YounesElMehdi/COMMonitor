@@ -35,21 +35,18 @@ def check_port_status(port):
             else:
                 logging.info("No data received or read timeout occurred.")
     except serial.SerialException as e:
-        status = "Unknown Error"
-        if sys.platform.startswith('win'):
-            if e.errno == 5:  # ERROR_ACCESS_DENIED
-                status = "In Use or Blocked"
-            elif e.errno == 2:  # ERROR_FILE_NOT_FOUND
-                status = "Unavailable"
-            elif e.errno == 31:  # ERROR_GEN_FAILURE
-                status = "Hardware Failure"
-            elif e.errno == 1167:  # ERROR_DEVICE_NOT_CONNECTED
-                status = "Disconnected"
-            elif e.errno == 22:  # ERROR_INVALID_PARAMETER
-                status = "Disabled or Invalid Configuration"
+        if isinstance(e, PermissionError) and e.errno == 13:  # ERROR_ACCESS_DENIED
+            status = "In Use or Blocked"
+        elif isinstance(e, FileNotFoundError) and e.errno == 2:  # ERROR_FILE_NOT_FOUND
+            status = "Unavailable/Disabled"
+        elif e.errno == 31:  # ERROR_GEN_FAILURE
+            status = "Hardware Failure"
+        elif e.errno == 1167:  # ERROR_DEVICE_NOT_CONNECTED
+            status = "Disconnected"
+        elif e.errno == 22:  # ERROR_INVALID_PARAMETER
+            status = "Disabled or Invalid Configuration"
         else:
-            # General handling for other platforms
-            status = "Unavailable or In Use"
+            status = "Unknown Error"
 
         print(f"Port {port.name} is {status}.")
         logging.error(f"Port {port.name} is {status}. Error: {e}")
